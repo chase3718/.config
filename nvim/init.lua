@@ -164,11 +164,20 @@ vim.lsp.config("svelte", {
 	capabilities = capabilities,
 })
 
+vim.lsp.config['kdl_ls'] = {
+	cmd = { 'kdl-ls', '--stdio' },
+	filetypes = { 'kdl' },
+	root_dir = function(fname)
+		return require('lspconfig.util').root_pattern('.git', 'config.kdl')(fname) or vim.fn.getcwd()
+	end,
+}
+
 vim.lsp.enable({
 	"lua_ls",
 	"ts_ls",
 	"svelte",
-	"jsonls"
+	"jsonls",
+	"kdl_ls"
 })
 
 -- LSP

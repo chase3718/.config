@@ -232,9 +232,9 @@ binds {
         spawn-sh "flatpak run one.ablaze.floorp";
     }
 
-    Super+Alt+S allow-when-locked=true hotkey-overlay-title=null {
-        spawn-sh "pkill orca || exec orca";
-    }
+		Super+E hotkey-overlay-title="Open File Explorer: Thunar" {
+			spawn "thunar"
+		}
 
 
     // -----------------------------------------
@@ -738,5 +738,14 @@ binds {
     Mod+Shift+P {
         power-off-monitors;
     }
+
+    // -----------------------------------------
+    // Misc 
+    // -----------------------------------------
+	 
+		Mod+Shift+W {
+				spawn-sh "systemd --user restart waybar"
+		}
+
 }
 
