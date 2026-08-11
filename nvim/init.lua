@@ -73,6 +73,9 @@ vim.pack.add({
 	},
 	{
 		src = "https://github.com/kdheepak/lazygit.nvim",
+	},
+	{
+		src = "https://github.com/brenoprata10/nvim-highlight-colors",
 	}
 })
 
@@ -165,6 +168,7 @@ vim.lsp.enable({
 	"lua_ls",
 	"ts_ls",
 	"svelte",
+	"jsonls"
 })
 
 -- LSP
@@ -227,6 +231,10 @@ wk.add({
 -- lazygit
 
 vim.keymap.set("n", "<leader>gg", "<cmd>LazyGit<CR>", { desc = "LazyGit" })
+
+-- Highlight Colors
+
+require("nvim-highlight-colors").setup()
 
 -- THEME --
 vim.cmd("colorscheme gruvbox")
