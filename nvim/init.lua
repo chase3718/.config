@@ -70,6 +70,9 @@ vim.pack.add({
 	},
 	{
 		src = "https://github.com/morhetz/gruvbox",
+	},
+	{
+		src = "https://github.com/kdheepak/lazygit.nvim",
 	}
 })
 
@@ -220,6 +223,10 @@ wk.add({
 		group = "language",
 	},
 })
+
+-- lazygit
+
+vim.keymap.set("n", "<leader>gg", "<cmd>LazyGit<CR>", { desc = "LazyGit" })
 
 -- THEME --
 vim.cmd("colorscheme gruvbox")
