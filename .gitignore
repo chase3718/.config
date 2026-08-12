@@ -7,5 +7,6 @@ libfm/
 Thunar/
 xfce4/
 htop/
+dconf/
 user-dirs.dirs 
 user-dirs.locale
