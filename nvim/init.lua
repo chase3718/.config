@@ -145,6 +145,9 @@ vim.pack.add({
 	{
 		src = "https://github.com/nvim-lualine/lualine.nvim",
 	},
+	{
+		src = "https://github.com/akinsho/bufferline.nvim",
+	},
 
 	-- Git
 	{
@@ -310,11 +313,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
 	callback = function(args)
 		local bufnr = args.buf
 
-		local opts = {
-			buffer = bufnr,
-			silent = true,
-		}
-
 		-- Navigation
 		map("n", "K", vim.lsp.buf.hover, {
 			buffer = bufnr,
@@ -394,24 +392,113 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 -- ============================================================================
 
 require("which-key").add({
+	-- --------------------------------------------------------------------------
+	-- Buffers
+	-- --------------------------------------------------------------------------
+
+	{
+		"<leader>b",
+		group = "buffers",
+	},
+
+	-- Keep numbered buffer shortcuts functional without displaying
+	-- all nine entries in Which-Key.
+	{
+		"<leader>1",
+		hidden = true,
+	},
+	{
+		"<leader>2",
+		hidden = true,
+	},
+	{
+		"<leader>3",
+		hidden = true,
+	},
+	{
+		"<leader>4",
+		hidden = true,
+	},
+	{
+		"<leader>5",
+		hidden = true,
+	},
+	{
+		"<leader>6",
+		hidden = true,
+	},
+	{
+		"<leader>7",
+		hidden = true,
+	},
+	{
+		"<leader>8",
+		hidden = true,
+	},
+	{
+		"<leader>9",
+		hidden = true,
+	},
+
+	-- --------------------------------------------------------------------------
+	-- Code
+	-- --------------------------------------------------------------------------
+
 	{
 		"<leader>c",
 		group = "code",
 	},
+
+	-- --------------------------------------------------------------------------
+	-- Git
+	-- --------------------------------------------------------------------------
+
 	{
 		"<leader>g",
 		group = "git",
 	},
+
+	-- --------------------------------------------------------------------------
+	-- Language
+	-- --------------------------------------------------------------------------
+
 	{
 		"<leader>l",
 		group = "language",
 	},
+
+	-- --------------------------------------------------------------------------
+	-- Quit
+	-- --------------------------------------------------------------------------
+
 	{
 		"<leader>q",
 		group = "quit",
 	},
-})
 
+	-- --------------------------------------------------------------------------
+	-- Config
+	-- --------------------------------------------------------------------------
+
+	{
+		"<leader>o",
+		desc = "Save and reload config",
+	},
+
+	-- --------------------------------------------------------------------------
+	-- File Explorer
+	-- --------------------------------------------------------------------------
+
+	{
+		"<leader>e",
+		desc = "Toggle file explorer",
+	},
+
+	{
+		"<leader>E",
+		desc = "Reveal current file",
+	},
+})
 
 -- ============================================================================
 -- Git
@@ -434,6 +521,146 @@ require("nvim-highlight-colors").setup()
 -- ============================================================================
 
 require("lualine").setup()
+
+
+-- ============================================================================
+-- Buffer Line
+-- ============================================================================
+
+require("bufferline").setup({
+	options = {
+		mode = "buffers",
+
+		-- Always display the bufferline.
+		always_show_bufferline = true,
+
+		-- Icons
+		show_buffer_icons = true,
+		show_buffer_close_icons = true,
+		show_close_icon = true,
+
+		-- Tab indicators
+		show_tab_indicators = true,
+
+		-- Buffer name sizing
+		max_name_length = 18,
+		max_prefix_length = 15,
+		tab_size = 18,
+
+		-- Buffer separators
+		separator_style = "slant",
+
+		-- Show LSP diagnostics in buffers.
+		diagnostics = "nvim_lsp",
+
+		-- Integrate with NvimTree.
+		offsets = {
+			{
+				filetype = "NvimTree",
+				text = "File Explorer",
+				text_align = "left",
+				separator = true,
+			},
+		},
+
+		-- Don't display these buffers in BufferLine.
+		custom_filter = function(buf_number)
+			local filetype = vim.bo[buf_number].filetype
+
+			local excluded = {
+				"alpha",
+				"NvimTree",
+				"help",
+				"qf",
+				"fugitive",
+			}
+
+			for _, ft in ipairs(excluded) do
+				if filetype == ft then
+					return false
+				end
+			end
+
+			return true
+		end,
+	},
+})
+
+
+-- --------------------------------------------------------------------------
+-- Buffer Navigation
+-- --------------------------------------------------------------------------
+
+-- Previous buffer.
+map("n", "<C-h>", "<cmd>BufferLineCyclePrev<CR>", {
+	desc = "Previous buffer",
+})
+
+-- Next buffer.
+map("n", "<C-l>", "<cmd>BufferLineCycleNext<CR>", {
+	desc = "Next buffer",
+})
+
+-- Alternative navigation with arrow keys.
+map("n", "<C-Left>", "<cmd>BufferLineCyclePrev<CR>", {
+	desc = "Previous buffer",
+})
+
+map("n", "<C-Right>", "<cmd>BufferLineCycleNext<CR>", {
+	desc = "Next buffer",
+})
+
+
+-- --------------------------------------------------------------------------
+-- Buffer Selection
+-- --------------------------------------------------------------------------
+
+-- Pick a buffer interactively.
+map("n", "<leader>bp", "<cmd>BufferLinePick<CR>", {
+	desc = "Pick buffer",
+})
+
+-- Jump directly to buffers 1-9.
+for i = 1, 9 do
+	map("n", "<leader>" .. i, "<cmd>BufferLineGoToBuffer " .. i .. "<CR>", {
+		desc = "Go to buffer " .. i,
+	})
+end
+
+-- Jump to the last buffer.
+map("n", "<leader>$", "<cmd>BufferLineGoToBuffer -1<CR>", {
+	desc = "Go to last buffer",
+})
+
+
+-- --------------------------------------------------------------------------
+-- Buffer Closing
+-- --------------------------------------------------------------------------
+
+-- Delete the current buffer.
+map("n", "<leader>bd", "<cmd>bdelete<CR>", {
+	desc = "Delete buffer",
+})
+
+-- Close all buffers except the current one.
+map("n", "<leader>bo", "<cmd>BufferLineCloseOthers<CR>", {
+	desc = "Close other buffers",
+})
+
+-- Close buffers to the left.
+map("n", "<leader>bl", "<cmd>BufferLineCloseLeft<CR>", {
+	desc = "Close buffers to left",
+})
+
+-- Close buffers to the right.
+map("n", "<leader>br", "<cmd>BufferLineCloseRight<CR>", {
+	desc = "Close buffers to right",
+})
+
+-- Close all buffers.
+map("n", "<leader>ba", "<cmd>bufdo bdelete<CR>", {
+	desc = "Close all buffers",
+})
 
 
 -- ============================================================================
