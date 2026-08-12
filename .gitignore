@@ -6,7 +6,13 @@ pulse/
 libfm/
 Thunar/
 xfce4/
-htop/
+htop/**/*
 dconf/
+htop/
+qutebrowser/
+GIMP/
+gtk-3.0/
+nautilus/
+mimeapps.list
 user-dirs.dirs 
 user-dirs.locale

@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+case "$1" in
+    full)
+        grim - | swappy -f -
+        ;;
+
+    screen)
+        output="$(niri msg --json focused-output | jq -r '.name')"
+
+        if [[ -n "$output" && "$output" != "null" ]]; then
+            grim -o "$output" - | swappy -f -
+        fi
+        ;;
+
+    area)
+        grim -g "$(slurp)" - | swappy -f -
+        ;;
+
+    *)
+        echo "Usage: niri-screenshot {full|screen|area}"
+        exit 1
+        ;;
+esac

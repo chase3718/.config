@@ -9,8 +9,9 @@
 --   3. Plugins
 --   4. Plugin configuration
 --   5. LSP
---   6. Autocommands
---   7. Theme
+--   6. Formatting
+--   7. Autocommands
+--   8. Theme
 -- ============================================================================
 
 
@@ -18,7 +19,6 @@
 -- General Settings
 -- ============================================================================
 
--- Leader key
 vim.g.mapleader = " "
 
 -- Disable netrw because we use nvim-tree instead.
@@ -55,31 +55,27 @@ vim.o.clipboard = "unnamedplus"
 
 local map = vim.keymap.set
 
+
 -- --------------------------------------------------------------------------
 -- General
 -- --------------------------------------------------------------------------
 
--- Quickly reload init.lua while editing it.
 map("n", "<leader>o", "<cmd>update<CR><cmd>source<CR>", {
 	desc = "Save and reload config",
 })
 
--- Leave insert mode with "jj".
 map("i", "jj", "<Esc>", {
 	desc = "Exit insert mode",
 })
 
--- Save from normal/insert/visual mode.
 map({ "n", "i", "x", "v" }, "<C-s>", "<Esc><cmd>write<CR>", {
 	desc = "Save buffer",
 })
 
--- Select the entire buffer.
 map({ "n", "i" }, "<C-a>", "ggVG", {
 	desc = "Select all",
 })
 
--- Quit Neovim.
 map("n", "<leader>qq", "<cmd>qall<CR>", {
 	desc = "Quit all",
 })
@@ -111,61 +107,100 @@ map("v", "<A-k>", "<cmd>m '<-2<CR>gv=gv", {
 -- ============================================================================
 
 vim.pack.add({
-	-- LSP
+	-- ------------------------------------------------------------------------
+	-- LSP / Formatting
+	-- ------------------------------------------------------------------------
+
 	{
 		src = "https://github.com/neovim/nvim-lspconfig",
 	},
+
+	{
+		src = "https://github.com/stevearc/conform.nvim",
+	},
+
 	{
 		src = "https://github.com/nvim-treesitter/nvim-treesitter",
 	},
 
+
+	-- ------------------------------------------------------------------------
 	-- Util
+	-- ------------------------------------------------------------------------
+
 	{
-		src = "https://github.com/ibhagwan/fzf-lua"
+		src = "https://github.com/ibhagwan/fzf-lua",
 	},
 
+
+	-- ------------------------------------------------------------------------
 	-- Completion
+	-- ------------------------------------------------------------------------
+
 	{
 		src = "https://github.com/Saghen/blink.cmp",
 	},
+
 	{
 		src = "https://github.com/rafamadriz/friendly-snippets",
 	},
 
+
+	-- ------------------------------------------------------------------------
 	-- Editing
+	-- ------------------------------------------------------------------------
+
 	{
 		src = "https://github.com/windwp/nvim-autopairs",
 	},
 
+
+	-- ------------------------------------------------------------------------
 	-- UI
+	-- ------------------------------------------------------------------------
+
 	{
 		src = "https://github.com/nvim-tree/nvim-web-devicons",
 	},
+
 	{
 		src = "https://github.com/nvim-tree/nvim-tree.lua",
 	},
+
 	{
 		src = "https://github.com/folke/which-key.nvim",
 	},
+
 	{
 		src = "https://github.com/brenoprata10/nvim-highlight-colors",
 	},
+
 	{
 		src = "https://github.com/nvim-lualine/lualine.nvim",
 	},
+
 	{
 		src = "https://github.com/akinsho/bufferline.nvim",
 	},
 
+
+	-- ------------------------------------------------------------------------
 	-- Git
+	-- ------------------------------------------------------------------------
+
 	{
 		src = "https://github.com/kdheepak/lazygit.nvim",
 	},
+
 	{
 		src = "https://github.com/lewis6991/gitsigns.nvim",
 	},
 
+
+	-- ------------------------------------------------------------------------
 	-- Theme
+	-- ------------------------------------------------------------------------
+
 	{
 		src = "https://github.com/morhetz/gruvbox",
 	},
@@ -189,20 +224,17 @@ blink.setup({
 	keymap = {
 		preset = "default",
 
-		-- Manually open the completion menu.
 		["<C-Space>"] = {
 			"show",
 			"show_documentation",
 			"hide_documentation",
 		},
 
-		-- Accept the current completion.
 		["<CR>"] = {
 			"accept",
 			"fallback",
 		},
 
-		-- Navigate snippets/completion items.
 		["<Tab>"] = {
 			"snippet_forward",
 			"select_next",
@@ -216,24 +248,20 @@ blink.setup({
 		},
 	},
 
-	-- Show completion automatically.
 	completion = {
 		menu = {
 			auto_show = true,
 		},
 
-		-- Documentation is shown manually.
 		documentation = {
 			auto_show = false,
 		},
 	},
 
-	-- Use Blink's built-in snippet support.
 	snippets = {
 		preset = "default",
 	},
 
-	-- Completion sources.
 	sources = {
 		default = {
 			"lsp",
@@ -251,7 +279,11 @@ blink.setup({
 
 local capabilities = blink.get_lsp_capabilities()
 
+
+-- --------------------------------------------------------------------------
 -- Lua
+-- --------------------------------------------------------------------------
+
 vim.lsp.config("lua_ls", {
 	capabilities = capabilities,
 
@@ -264,20 +296,29 @@ vim.lsp.config("lua_ls", {
 	},
 })
 
+
+-- --------------------------------------------------------------------------
 -- TypeScript / JavaScript
+-- --------------------------------------------------------------------------
+
 vim.lsp.config("ts_ls", {
 	capabilities = capabilities,
 })
 
+
+-- --------------------------------------------------------------------------
 -- Svelte
+-- --------------------------------------------------------------------------
+
 vim.lsp.config("svelte", {
 	capabilities = capabilities,
 })
 
+
+-- --------------------------------------------------------------------------
 -- KDL
---
--- Uses Neovim's built-in vim.fs.root() instead of
--- lspconfig.util.root_pattern().
+-- --------------------------------------------------------------------------
+
 vim.lsp.config("kdl_ls", {
 	cmd = {
 		"kdl-ls",
@@ -302,7 +343,11 @@ vim.lsp.config("kdl_ls", {
 	capabilities = capabilities,
 })
 
--- Enable language servers.
+
+-- --------------------------------------------------------------------------
+-- Enable Language Servers
+-- --------------------------------------------------------------------------
+
 vim.lsp.enable({
 	"lua_ls",
 	"ts_ls",
@@ -355,50 +400,165 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
 
 -- ============================================================================
--- LSP Formatting
+-- Conform Formatting
 -- ============================================================================
 
--- Format the current buffer manually.
+local conform = require("conform")
+
+conform.setup({
+	formatters_by_ft = {
+		-- ----------------------------------------------------------------------
+		-- Lua
+		-- ----------------------------------------------------------------------
+
+		lua = {
+			"stylua",
+		},
+
+
+		-- ----------------------------------------------------------------------
+		-- JavaScript / TypeScript
+		-- ----------------------------------------------------------------------
+
+		javascript = {
+			"prettier",
+		},
+
+		typescript = {
+			"prettier",
+		},
+
+		javascriptreact = {
+			"prettier",
+		},
+
+		typescriptreact = {
+			"prettier",
+		},
+
+
+		-- ----------------------------------------------------------------------
+		-- Svelte
+		-- ----------------------------------------------------------------------
+
+		svelte = {
+			"prettier",
+		},
+
+
+		-- ----------------------------------------------------------------------
+		-- Web
+		-- ----------------------------------------------------------------------
+
+		html = {
+			"prettier",
+		},
+
+		css = {
+			"prettier",
+		},
+
+		scss = {
+			"prettier",
+		},
+
+
+		-- ----------------------------------------------------------------------
+		-- JSON
+		-- ----------------------------------------------------------------------
+
+		json = {
+			"prettier",
+		},
+
+		jsonc = {
+			"prettier",
+		},
+
+
+		-- ----------------------------------------------------------------------
+		-- YAML
+		-- ----------------------------------------------------------------------
+
+		yaml = {
+			"prettier",
+		},
+
+
+		-- ----------------------------------------------------------------------
+		-- Markdown
+		-- ----------------------------------------------------------------------
+
+		markdown = {
+			"prettier",
+		},
+
+
+		-- ----------------------------------------------------------------------
+		-- KDL
+		-- ----------------------------------------------------------------------
+
+		-- KDL doesn't have an external formatter configured here.
+		-- Fall back to the LSP if it supports formatting.
+		kdl = {
+			lsp_format = "fallback",
+		},
+
+
+		-- ----------------------------------------------------------------------
+		-- Shell
+		-- ----------------------------------------------------------------------
+
+		sh = {
+			"shfmt",
+		},
+
+		bash = {
+			"shfmt",
+		},
+
+
+		-- ----------------------------------------------------------------------
+		-- TOML
+		-- ----------------------------------------------------------------------
+
+		toml = {
+			"taplo",
+		},
+	},
+
+
+	-- --------------------------------------------------------------------------
+	-- Format on Save
+	-- --------------------------------------------------------------------------
+
+	format_on_save = {
+		timeout_ms = 500,
+
+		-- Use Conform's formatter first.
+		-- If no formatter is available, use the LSP.
+		lsp_format = "fallback",
+	},
+
+	notify_on_error = true,
+})
+
+
+-- --------------------------------------------------------------------------
+-- Manual Formatting
+-- --------------------------------------------------------------------------
+
 map("n", "<leader>lf", function()
-	vim.lsp.buf.format({
+	conform.format({
 		async = true,
+		lsp_format = "fallback",
 	})
 end, {
 	desc = "Format current file",
 })
 
 
--- Format supported buffers automatically before saving.
-vim.api.nvim_create_autocmd("BufWritePre", {
-	group = vim.api.nvim_create_augroup("UserLspFormatting", {
-		clear = true,
-	}),
-
-	callback = function(args)
-		local clients = vim.lsp.get_clients({
-			bufnr = args.buf,
-		})
-
-		local can_format = false
-
-		for _, client in ipairs(clients) do
-			if client:supports_method("textDocument/formatting") then
-				can_format = true
-				break
-			end
-		end
-
-		if can_format then
-			vim.lsp.buf.format({
-				bufnr = args.buf,
-				async = false,
-			})
-		end
-	end,
-})
-
-
---- ============================================================================
+-- ============================================================================
 -- Treesitter
 -- ============================================================================
 
@@ -426,6 +586,7 @@ require("nvim-treesitter").install({
 	"diff",
 })
 
+
 vim.api.nvim_create_autocmd("FileType", {
 	group = vim.api.nvim_create_augroup("UserTreesitter", {
 		clear = true,
@@ -437,7 +598,6 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 
-
 -- ============================================================================
 -- Fuzzy Find (fzf-lua)
 -- ============================================================================
@@ -445,22 +605,19 @@ vim.api.nvim_create_autocmd("FileType", {
 local fzf = require("fzf-lua")
 
 fzf.setup({
-	-- Use the current Neovim colorscheme.
 	fzf_colors = true,
 
-	-- General window appearance.
 	winopts = {
 		height = 0.85,
 		width = 0.90,
+
 		preview = {
 			layout = "vertical",
 			vertical = "down:45%",
 		},
 	},
 
-	-- File picker.
 	files = {
-		-- Use fd when available.
 		fzf_opts = {
 			["--history"] = vim.fn.stdpath("data") .. "/fzf-lua-history",
 		},
@@ -474,7 +631,6 @@ fzf.setup({
 		]],
 	},
 
-	-- Grep configuration.
 	grep = {
 		rg_opts = [[
 			--column
@@ -487,12 +643,10 @@ fzf.setup({
 		]],
 	},
 
-	-- Buffers.
 	buffers = {
 		sort_lastused = true,
 	},
 
-	-- Git files.
 	git = {
 		files = {
 			cmd = "git ls-files --cached --others --exclude-standard",
@@ -505,16 +659,15 @@ fzf.setup({
 -- FzfLua Keymaps
 -- ============================================================================
 
+
 -- --------------------------------------------------------------------------
 -- Files
 -- --------------------------------------------------------------------------
 
--- Find files in the current working directory.
 map("n", "<leader>ff", fzf.files, {
 	desc = "Find files",
 })
 
--- Find ALL files, including hidden files.
 map("n", "<leader>fF", function()
 	fzf.files({
 		fd_opts = [[
@@ -534,12 +687,10 @@ end, {
 -- Search
 -- --------------------------------------------------------------------------
 
--- Search text in the current project.
 map("n", "<leader>fg", fzf.live_grep, {
 	desc = "Live grep",
 })
 
--- Search the entire project, including hidden files.
 map("n", "<leader>fG", function()
 	fzf.live_grep({
 		rg_opts = [[
@@ -635,6 +786,7 @@ map("n", "<leader>fp", fzf.resume, {
 	desc = "Resume picker",
 })
 
+
 -- ============================================================================
 -- Which-Key
 -- ============================================================================
@@ -655,38 +807,47 @@ require("which-key").add({
 		"<leader>1",
 		hidden = true,
 	},
+
 	{
 		"<leader>2",
 		hidden = true,
 	},
+
 	{
 		"<leader>3",
 		hidden = true,
 	},
+
 	{
 		"<leader>4",
 		hidden = true,
 	},
+
 	{
 		"<leader>5",
 		hidden = true,
 	},
+
 	{
 		"<leader>6",
 		hidden = true,
 	},
+
 	{
 		"<leader>7",
 		hidden = true,
 	},
+
 	{
 		"<leader>8",
 		hidden = true,
 	},
+
 	{
 		"<leader>9",
 		hidden = true,
 	},
+
 
 	-- --------------------------------------------------------------------------
 	-- Code
@@ -697,6 +858,7 @@ require("which-key").add({
 		group = "code",
 	},
 
+
 	-- --------------------------------------------------------------------------
 	-- Git
 	-- --------------------------------------------------------------------------
@@ -705,10 +867,12 @@ require("which-key").add({
 		"<leader>g",
 		group = "git",
 	},
+
 	{
 		"<leader>h",
 		group = "hunks",
 	},
+
 
 	-- --------------------------------------------------------------------------
 	-- Language
@@ -719,6 +883,7 @@ require("which-key").add({
 		group = "language",
 	},
 
+
 	-- --------------------------------------------------------------------------
 	-- Quit
 	-- --------------------------------------------------------------------------
@@ -728,6 +893,7 @@ require("which-key").add({
 		group = "quit",
 	},
 
+
 	-- --------------------------------------------------------------------------
 	-- Config
 	-- --------------------------------------------------------------------------
@@ -736,6 +902,7 @@ require("which-key").add({
 		"<leader>o",
 		desc = "Save and reload config",
 	},
+
 
 	-- --------------------------------------------------------------------------
 	-- File Explorer
@@ -752,6 +919,7 @@ require("which-key").add({
 	},
 })
 
+
 -- ============================================================================
 -- Git
 -- ============================================================================
@@ -759,6 +927,7 @@ require("which-key").add({
 map("n", "<leader>gg", "<cmd>LazyGit<CR>", {
 	desc = "Open LazyGit",
 })
+
 
 -- ============================================================================
 -- Git Signs
@@ -773,22 +942,26 @@ require("gitsigns").setup({
 		add = {
 			text = "+",
 		},
+
 		change = {
 			text = "~",
 		},
+
 		delete = {
 			text = "_",
 		},
+
 		topdelete = {
 			text = "‾",
 		},
+
 		changedelete = {
 			text = "~",
 		},
 	},
 
-	-- Show signs in the sign column.
 	signcolumn = true,
+
 
 	-- --------------------------------------------------------------------------
 	-- Line Blame
@@ -803,7 +976,9 @@ require("gitsigns").setup({
 		ignore_whitespace = false,
 	},
 
-	current_line_blame_formatter = "<author>, <author_time:%R> - <summary>",
+	current_line_blame_formatter =
+	"<author>, <author_time:%R> - <summary>",
+
 
 	-- --------------------------------------------------------------------------
 	-- Preview
@@ -817,6 +992,7 @@ require("gitsigns").setup({
 		col = 1,
 	},
 
+
 	-- --------------------------------------------------------------------------
 	-- Watch for changes
 	-- --------------------------------------------------------------------------
@@ -825,33 +1001,34 @@ require("gitsigns").setup({
 		follow_files = true,
 	},
 
+
 	-- --------------------------------------------------------------------------
 	-- Performance
 	-- --------------------------------------------------------------------------
 
 	update_debounce = 100,
 
+
 	-- --------------------------------------------------------------------------
 	-- Navigation
 	-- --------------------------------------------------------------------------
 
-	current_line_blame = false,
-
 	on_attach = function(bufnr)
 		local gs = package.loaded.gitsigns
 
-		local function map(mode, lhs, rhs, desc)
+		local function map_gitsigns(mode, lhs, rhs, desc)
 			vim.keymap.set(mode, lhs, rhs, {
 				buffer = bufnr,
 				desc = desc,
 			})
 		end
 
+
 		-- ----------------------------------------------------------------------
 		-- Hunk Navigation
 		-- ----------------------------------------------------------------------
 
-		map("n", "]h", function()
+		map_gitsigns("n", "]h", function()
 			if vim.wo.diff then
 				vim.cmd.normal({ "]h", bang = true })
 			else
@@ -859,7 +1036,8 @@ require("gitsigns").setup({
 			end
 		end, "Next git hunk")
 
-		map("n", "[h", function()
+
+		map_gitsigns("n", "[h", function()
 			if vim.wo.diff then
 				vim.cmd.normal({ "[h", bang = true })
 			else
@@ -867,57 +1045,106 @@ require("gitsigns").setup({
 			end
 		end, "Previous git hunk")
 
+
 		-- ----------------------------------------------------------------------
 		-- Hunk Actions
 		-- ----------------------------------------------------------------------
 
-		map("n", "<leader>hs", gs.stage_hunk, "Stage hunk")
+		map_gitsigns(
+			"n",
+			"<leader>hs",
+			gs.stage_hunk,
+			"Stage hunk"
+		)
 
-		map("n", "<leader>hr", gs.reset_hunk, "Reset hunk")
+		map_gitsigns(
+			"n",
+			"<leader>hr",
+			gs.reset_hunk,
+			"Reset hunk"
+		)
 
-		map("v", "<leader>hs", function()
+
+		map_gitsigns("v", "<leader>hs", function()
 			gs.stage_hunk({
 				vim.fn.line("."),
 				vim.fn.line("v"),
 			})
 		end, "Stage selected hunk")
 
-		map("v", "<leader>hr", function()
+
+		map_gitsigns("v", "<leader>hr", function()
 			gs.reset_hunk({
 				vim.fn.line("."),
 				vim.fn.line("v"),
 			})
 		end, "Reset selected hunk")
 
-		map("n", "<leader>hS", gs.stage_buffer, "Stage buffer")
 
-		map("n", "<leader>hR", gs.reset_buffer, "Reset buffer")
+		map_gitsigns(
+			"n",
+			"<leader>hS",
+			gs.stage_buffer,
+			"Stage buffer"
+		)
+
+		map_gitsigns(
+			"n",
+			"<leader>hR",
+			gs.reset_buffer,
+			"Reset buffer"
+		)
+
 
 		-- ----------------------------------------------------------------------
 		-- Hunk Information
 		-- ----------------------------------------------------------------------
 
-		map("n", "<leader>hp", gs.preview_hunk, "Preview hunk")
+		map_gitsigns(
+			"n",
+			"<leader>hp",
+			gs.preview_hunk,
+			"Preview hunk"
+		)
 
-		map("n", "<leader>hb", function()
+
+		map_gitsigns("n", "<leader>hb", function()
 			gs.blame_line({
 				full = true,
 			})
 		end, "Blame line")
 
-		map("n", "<leader>hd", gs.diffthis, "Diff buffer")
 
-		map("n", "<leader>hD", function()
+		map_gitsigns(
+			"n",
+			"<leader>hd",
+			gs.diffthis,
+			"Diff buffer"
+		)
+
+
+		map_gitsigns("n", "<leader>hD", function()
 			gs.diffthis("~")
 		end, "Diff against HEAD")
+
 
 		-- ----------------------------------------------------------------------
 		-- Toggle
 		-- ----------------------------------------------------------------------
 
-		map("n", "<leader>ht", gs.toggle_current_line_blame, "Toggle line blame")
+		map_gitsigns(
+			"n",
+			"<leader>ht",
+			gs.toggle_current_line_blame,
+			"Toggle line blame"
+		)
 
-		map("n", "<leader>hT", gs.toggle_deleted, "Toggle deleted lines")
+		map_gitsigns(
+			"n",
+			"<leader>hT",
+			gs.toggle_deleted,
+			"Toggle deleted lines"
+		)
 	end,
 })
 
@@ -944,7 +1171,6 @@ require("bufferline").setup({
 	options = {
 		mode = "buffers",
 
-		-- Always display the bufferline.
 		always_show_bufferline = true,
 
 		-- Icons
@@ -963,10 +1189,10 @@ require("bufferline").setup({
 		-- Buffer separators
 		separator_style = "slant",
 
-		-- Show LSP diagnostics in buffers.
+		-- LSP diagnostics
 		diagnostics = "nvim_lsp",
 
-		-- Integrate with NvimTree.
+		-- Integrate with NvimTree
 		offsets = {
 			{
 				filetype = "NvimTree",
@@ -976,7 +1202,7 @@ require("bufferline").setup({
 			},
 		},
 
-		-- Don't display these buffers in BufferLine.
+		-- Don't display these buffers in BufferLine
 		custom_filter = function(buf_number)
 			local filetype = vim.bo[buf_number].filetype
 
@@ -1004,17 +1230,14 @@ require("bufferline").setup({
 -- Buffer Navigation
 -- --------------------------------------------------------------------------
 
--- Previous buffer.
 map("n", "<C-h>", "<cmd>BufferLineCyclePrev<CR>", {
 	desc = "Previous buffer",
 })
 
--- Next buffer.
 map("n", "<C-l>", "<cmd>BufferLineCycleNext<CR>", {
 	desc = "Next buffer",
 })
 
--- Alternative navigation with arrow keys.
 map("n", "<C-Left>", "<cmd>BufferLineCyclePrev<CR>", {
 	desc = "Previous buffer",
 })
@@ -1028,19 +1251,21 @@ map("n", "<C-Right>", "<cmd>BufferLineCycleNext<CR>", {
 -- Buffer Selection
 -- --------------------------------------------------------------------------
 
--- Pick a buffer interactively.
 map("n", "<leader>bp", "<cmd>BufferLinePick<CR>", {
 	desc = "Pick buffer",
 })
 
--- Jump directly to buffers 1-9.
 for i = 1, 9 do
-	map("n", "<leader>" .. i, "<cmd>BufferLineGoToBuffer " .. i .. "<CR>", {
-		desc = "Go to buffer " .. i,
-	})
+	map(
+		"n",
+		"<leader>" .. i,
+		"<cmd>BufferLineGoToBuffer " .. i .. "<CR>",
+		{
+			desc = "Go to buffer " .. i,
+		}
+	)
 end
 
--- Jump to the last buffer.
 map("n", "<leader>$", "<cmd>BufferLineGoToBuffer -1<CR>", {
 	desc = "Go to last buffer",
 })
@@ -1050,27 +1275,22 @@ map("n", "<leader>$", "<cmd>BufferLineGoToBuffer -1<CR>", {
 -- Buffer Closing
 -- --------------------------------------------------------------------------
 
--- Delete the current buffer.
 map("n", "<leader>bd", "<cmd>bdelete<CR>", {
 	desc = "Delete buffer",
 })
 
--- Close all buffers except the current one.
 map("n", "<leader>bo", "<cmd>BufferLineCloseOthers<CR>", {
 	desc = "Close other buffers",
 })
 
--- Close buffers to the left.
 map("n", "<leader>bl", "<cmd>BufferLineCloseLeft<CR>", {
 	desc = "Close buffers to left",
 })
 
--- Close buffers to the right.
 map("n", "<leader>br", "<cmd>BufferLineCloseRight<CR>", {
 	desc = "Close buffers to right",
 })
 
--- Close all buffers.
 map("n", "<leader>ba", "<cmd>bufdo bdelete<CR>", {
 	desc = "Close all buffers",
 })
