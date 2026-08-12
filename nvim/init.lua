@@ -115,6 +115,14 @@ vim.pack.add({
 	{
 		src = "https://github.com/neovim/nvim-lspconfig",
 	},
+	{
+		src = "https://github.com/nvim-treesitter/nvim-treesitter",
+	},
+
+	-- Util
+	{
+		src = "https://github.com/ibhagwan/fzf-lua"
+	},
 
 	-- Completion
 	{
@@ -152,6 +160,9 @@ vim.pack.add({
 	-- Git
 	{
 		src = "https://github.com/kdheepak/lazygit.nvim",
+	},
+	{
+		src = "https://github.com/lewis6991/gitsigns.nvim",
 	},
 
 	-- Theme
@@ -387,6 +398,243 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 })
 
 
+--- ============================================================================
+-- Treesitter
+-- ============================================================================
+
+require("nvim-treesitter").install({
+	"lua",
+	"vim",
+	"vimdoc",
+	"javascript",
+	"typescript",
+	"tsx",
+	"svelte",
+	"json",
+	"jsonc",
+	"html",
+	"css",
+	"scss",
+	"bash",
+	"markdown",
+	"markdown_inline",
+	"yaml",
+	"toml",
+	"kdl",
+	"gitignore",
+	"gitcommit",
+	"diff",
+})
+
+vim.api.nvim_create_autocmd("FileType", {
+	group = vim.api.nvim_create_augroup("UserTreesitter", {
+		clear = true,
+	}),
+
+	callback = function(args)
+		pcall(vim.treesitter.start, args.buf)
+	end,
+})
+
+
+
+-- ============================================================================
+-- Fuzzy Find (fzf-lua)
+-- ============================================================================
+
+local fzf = require("fzf-lua")
+
+fzf.setup({
+	-- Use the current Neovim colorscheme.
+	fzf_colors = true,
+
+	-- General window appearance.
+	winopts = {
+		height = 0.85,
+		width = 0.90,
+		preview = {
+			layout = "vertical",
+			vertical = "down:45%",
+		},
+	},
+
+	-- File picker.
+	files = {
+		-- Use fd when available.
+		fzf_opts = {
+			["--history"] = vim.fn.stdpath("data") .. "/fzf-lua-history",
+		},
+
+		-- Don't show hidden files or .git by default.
+		fd_opts = [[
+			--color=never
+			--type f
+			--hidden
+			--exclude .git
+		]],
+	},
+
+	-- Grep configuration.
+	grep = {
+		rg_opts = [[
+			--column
+			--line-number
+			--no-heading
+			--color=never
+			--smart-case
+			--hidden
+			--glob=!**/.git/**
+		]],
+	},
+
+	-- Buffers.
+	buffers = {
+		sort_lastused = true,
+	},
+
+	-- Git files.
+	git = {
+		files = {
+			cmd = "git ls-files --cached --others --exclude-standard",
+		},
+	},
+})
+
+
+-- ============================================================================
+-- FzfLua Keymaps
+-- ============================================================================
+
+-- --------------------------------------------------------------------------
+-- Files
+-- --------------------------------------------------------------------------
+
+-- Find files in the current working directory.
+map("n", "<leader>ff", fzf.files, {
+	desc = "Find files",
+})
+
+-- Find ALL files, including hidden files.
+map("n", "<leader>fF", function()
+	fzf.files({
+		fd_opts = [[
+			--color=never
+			--type f
+			--hidden
+			--no-ignore
+			--exclude .git
+		]],
+	})
+end, {
+	desc = "Find all files",
+})
+
+
+-- --------------------------------------------------------------------------
+-- Search
+-- --------------------------------------------------------------------------
+
+-- Search text in the current project.
+map("n", "<leader>fg", fzf.live_grep, {
+	desc = "Live grep",
+})
+
+-- Search the entire project, including hidden files.
+map("n", "<leader>fG", function()
+	fzf.live_grep({
+		rg_opts = [[
+			--column
+			--line-number
+			--no-heading
+			--color=never
+			--smart-case
+			--hidden
+			--no-ignore
+			--glob=!**/.git/**
+		]],
+	})
+end, {
+	desc = "Live grep all files",
+})
+
+
+-- --------------------------------------------------------------------------
+-- Buffers
+-- --------------------------------------------------------------------------
+
+map("n", "<leader>fb", fzf.buffers, {
+	desc = "Find buffers",
+})
+
+
+-- --------------------------------------------------------------------------
+-- Recent Files
+-- --------------------------------------------------------------------------
+
+map("n", "<leader>fr", fzf.oldfiles, {
+	desc = "Recent files",
+})
+
+
+-- --------------------------------------------------------------------------
+-- Git
+-- --------------------------------------------------------------------------
+
+map("n", "<leader>gf", fzf.git_files, {
+	desc = "Git files",
+})
+
+
+-- --------------------------------------------------------------------------
+-- LSP
+-- --------------------------------------------------------------------------
+
+map("n", "<leader>fs", fzf.lsp_document_symbols, {
+	desc = "Document symbols",
+})
+
+map("n", "<leader>fS", fzf.lsp_workspace_symbols, {
+	desc = "Workspace symbols",
+})
+
+map("n", "<leader>fd", fzf.lsp_definitions, {
+	desc = "Definitions",
+})
+
+map("n", "<leader>fR", fzf.lsp_references, {
+	desc = "References",
+})
+
+
+-- --------------------------------------------------------------------------
+-- Neovim
+-- --------------------------------------------------------------------------
+
+map("n", "<leader>fh", fzf.help_tags, {
+	desc = "Help tags",
+})
+
+map("n", "<leader>fk", fzf.keymaps, {
+	desc = "Keymaps",
+})
+
+map("n", "<leader>fc", fzf.commands, {
+	desc = "Commands",
+})
+
+map("n", "<leader>fm", fzf.marks, {
+	desc = "Marks",
+})
+
+
+-- --------------------------------------------------------------------------
+-- Resume
+-- --------------------------------------------------------------------------
+
+map("n", "<leader>fp", fzf.resume, {
+	desc = "Resume picker",
+})
+
 -- ============================================================================
 -- Which-Key
 -- ============================================================================
@@ -457,6 +705,10 @@ require("which-key").add({
 		"<leader>g",
 		group = "git",
 	},
+	{
+		"<leader>h",
+		group = "hunks",
+	},
 
 	-- --------------------------------------------------------------------------
 	-- Language
@@ -506,6 +758,167 @@ require("which-key").add({
 
 map("n", "<leader>gg", "<cmd>LazyGit<CR>", {
 	desc = "Open LazyGit",
+})
+
+-- ============================================================================
+-- Git Signs
+-- ============================================================================
+
+require("gitsigns").setup({
+	-- --------------------------------------------------------------------------
+	-- Signs
+	-- --------------------------------------------------------------------------
+
+	signs = {
+		add = {
+			text = "+",
+		},
+		change = {
+			text = "~",
+		},
+		delete = {
+			text = "_",
+		},
+		topdelete = {
+			text = "‾",
+		},
+		changedelete = {
+			text = "~",
+		},
+	},
+
+	-- Show signs in the sign column.
+	signcolumn = true,
+
+	-- --------------------------------------------------------------------------
+	-- Line Blame
+	-- --------------------------------------------------------------------------
+
+	current_line_blame = false,
+
+	current_line_blame_opts = {
+		virt_text = true,
+		virt_text_pos = "eol",
+		delay = 500,
+		ignore_whitespace = false,
+	},
+
+	current_line_blame_formatter = "<author>, <author_time:%R> - <summary>",
+
+	-- --------------------------------------------------------------------------
+	-- Preview
+	-- --------------------------------------------------------------------------
+
+	preview_config = {
+		border = "rounded",
+		style = "minimal",
+		relative = "cursor",
+		row = 0,
+		col = 1,
+	},
+
+	-- --------------------------------------------------------------------------
+	-- Watch for changes
+	-- --------------------------------------------------------------------------
+
+	watch_gitdir = {
+		follow_files = true,
+	},
+
+	-- --------------------------------------------------------------------------
+	-- Performance
+	-- --------------------------------------------------------------------------
+
+	update_debounce = 100,
+
+	-- --------------------------------------------------------------------------
+	-- Navigation
+	-- --------------------------------------------------------------------------
+
+	current_line_blame = false,
+
+	on_attach = function(bufnr)
+		local gs = package.loaded.gitsigns
+
+		local function map(mode, lhs, rhs, desc)
+			vim.keymap.set(mode, lhs, rhs, {
+				buffer = bufnr,
+				desc = desc,
+			})
+		end
+
+		-- ----------------------------------------------------------------------
+		-- Hunk Navigation
+		-- ----------------------------------------------------------------------
+
+		map("n", "]h", function()
+			if vim.wo.diff then
+				vim.cmd.normal({ "]h", bang = true })
+			else
+				gs.next_hunk()
+			end
+		end, "Next git hunk")
+
+		map("n", "[h", function()
+			if vim.wo.diff then
+				vim.cmd.normal({ "[h", bang = true })
+			else
+				gs.prev_hunk()
+			end
+		end, "Previous git hunk")
+
+		-- ----------------------------------------------------------------------
+		-- Hunk Actions
+		-- ----------------------------------------------------------------------
+
+		map("n", "<leader>hs", gs.stage_hunk, "Stage hunk")
+
+		map("n", "<leader>hr", gs.reset_hunk, "Reset hunk")
+
+		map("v", "<leader>hs", function()
+			gs.stage_hunk({
+				vim.fn.line("."),
+				vim.fn.line("v"),
+			})
+		end, "Stage selected hunk")
+
+		map("v", "<leader>hr", function()
+			gs.reset_hunk({
+				vim.fn.line("."),
+				vim.fn.line("v"),
+			})
+		end, "Reset selected hunk")
+
+		map("n", "<leader>hS", gs.stage_buffer, "Stage buffer")
+
+		map("n", "<leader>hR", gs.reset_buffer, "Reset buffer")
+
+		-- ----------------------------------------------------------------------
+		-- Hunk Information
+		-- ----------------------------------------------------------------------
+
+		map("n", "<leader>hp", gs.preview_hunk, "Preview hunk")
+
+		map("n", "<leader>hb", function()
+			gs.blame_line({
+				full = true,
+			})
+		end, "Blame line")
+
+		map("n", "<leader>hd", gs.diffthis, "Diff buffer")
+
+		map("n", "<leader>hD", function()
+			gs.diffthis("~")
+		end, "Diff against HEAD")
+
+		-- ----------------------------------------------------------------------
+		-- Toggle
+		-- ----------------------------------------------------------------------
+
+		map("n", "<leader>ht", gs.toggle_current_line_blame, "Toggle line blame")
+
+		map("n", "<leader>hT", gs.toggle_deleted, "Toggle deleted lines")
+	end,
 })
 
 
